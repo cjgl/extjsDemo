@@ -4,7 +4,7 @@ Ext.onReady(function() {
 	var userStore = new Ext.data.JsonStore({
 		autoLoad : true,
 	    autoDestroy: true,
-	    url: 'loadProject.txt',
+	    url: 'loadProject.json',
 	    storeId: 'projectStore',
 	    root: 'projects',
 	    idProperty: 'id',

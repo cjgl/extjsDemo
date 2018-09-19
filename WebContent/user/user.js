@@ -18,6 +18,7 @@ Ext.onReady(function() {
 		        defaults: {width: 200},
 		        items : [{
 		        	xtype: 'textfield',
+		        	id: 'name',
 		            name: 'name',
 		            fieldLabel: '用户名',
 		            maxLength : 10,
@@ -67,20 +68,17 @@ Ext.onReady(function() {
 		                var form = Ext.getCmp('addUserForm').getForm();
 		                
 		                if (form.isValid()) {
-		                    form.submit({
-		                    	clientValidation: true,
-		                        url: 'addUser.do',
-		                        waitTitle : '提示',
-		                        waitMsg : '正在提交...',
-		                        success: function(form, action) {
-		                           Ext.Msg.alert('成功', action.result.msg);
-		                           addUserWin.close();
-		                           Ext.StoreMgr.lookup('userStore').load();  
-		                        },
-		                        failure: function(form, action) {
-		                            Ext.Msg.alert('失败', action.result.msg);
-		                        }
-		                    });
+		                	var current = new Date().format('Y-m-d H:i:s');
+		                	var UserRecord = Ext.data.Record.create(['id','name','createtime','updatetime']);
+			                var defaultData = {
+			                	id : Ext.StoreMgr.lookup('userStore').getTotalCount(),
+			                	name : Ext.getCmp('name').getValue(),
+			                	createtime: current,
+			                	updatetime : current
+			                };
+                			var r = new UserRecord(defaultData);console.log(defaultData);
+                			Ext.StoreMgr.lookup('userStore').insert(Ext.StoreMgr.lookup('userStore').getTotalCount(), r);
+		                    addUserWin.close();
 		                }
 		            }
 		        }]
@@ -108,6 +106,7 @@ Ext.onReady(function() {
 		            name: 'id'
 		        }, {
 		        	xtype: 'textfield',
+		        	id: 'name',
 		            name: 'name',
 		            fieldLabel: '用户名',
 		            maxLength : 10,
@@ -156,33 +155,21 @@ Ext.onReady(function() {
 		            handler: function() {
 		                var form = Ext.getCmp('modUserForm').getForm();
 		                if (form.isValid()) {
-		                    form.submit({
-		                    	clientValidation: true,
-		                        url: 'modUser.do',
-		                        waitTitle : '提示',
-		                        waitMsg : '正在提交...',
-		                        success: function(form, action) {
-		                           Ext.Msg.alert('成功', action.result.msg);
-		                           modUserWin.close();
-		                           Ext.StoreMgr.lookup('userStore').load();
-		                        },
-		                        failure: function(form, action) {
-		                            Ext.Msg.alert('失败', action.result.msg);
-		                        }
-		                    });
+		                	record.set("name", Ext.getCmp('name').getValue());
+		                	record.set("updatetime", new Date().format('Y-m-d H:i:s'));
+		                    modUserWin.close();
 		                }
 		            }
 		        }]
 		    }]
 		}).show();
 		Ext.getCmp('modUserForm').getForm().loadRecord(record);
-		
 	}
 	
 	var userStore = new Ext.data.JsonStore({
 		autoLoad : true,
 	    autoDestroy: true,
-	    url: 'loadUser.do',
+	    url: 'loadUser.json',
 	    storeId: 'userStore',
 	    root: 'users',
 	    idProperty: 'id',
@@ -226,26 +213,9 @@ Ext.onReady(function() {
 	    		
 	    		Ext.Msg.confirm('提示', '请确认删除' , function(btn){
 	    			if(btn == 'yes'){
-	    				Ext.Msg.wait('请稍候','正在删除');
-	    				var id = userGrid.getSelectionModel().getSelected().get('id');
-	    	    		Ext.Ajax.request({
-	    	    		    url: 'delUser.do',
-	    	    		    params: {
-	    	    		        id: id
-	    	    		    },
-	    	    		    success: function(response){
-	    	    		        var text = Ext.util.JSON.decode(response.responseText);
-	    	    		        if(text.success){
-	    	    		        	Ext.Msg.alert('提示', text.msg);
-	    	    		        	Ext.StoreMgr.lookup('userStore').load();
-	    	    		        } else {
-	    	    		        	Ext.Msg.alert('提示', text.msg);
-	    	    		        }
-	    	    		    },
-	    	    		    failure: function(response) {
-	    	    		    	Ext.Msg.alert('提示', '删除失败 : '+response.status);
-	    	    		    }
-	    	    		});
+	    				var record = userGrid.getSelectionModel().getSelected();
+	    				Ext.StoreMgr.lookup('userStore').remove(record);
+	    				Ext.Msg.alert('提示', "删除成功");
 	    			}	
 	    		});	
 	        }
@@ -270,7 +240,7 @@ Ext.onReady(function() {
 	});
 	
 	userGrid.on('rowdblclick', function(grid, row, e){
-		var record = grid.store.getAt(row);console.log(record);
+		var record = grid.store.getAt(row);
 		modUser(record);
 	});
 	
